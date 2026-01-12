@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices.Marshalling;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -191,6 +192,73 @@ public static class CharHelperLines
 
         if (frameWidth < bigWord + 2) { frameWidth = bigWord + 2; }
 
-        yield return "end of line";
+        var calculatedLines = new List<string>();
+        var line = new StringBuilder();
+
+        foreach (var word in words)
+        {
+            if (line.Length == 0)
+            {
+                line.Append(word);
+            }
+            else if (line.Length + word.Length + 1 <= frameWidth)
+            {
+                // the case where we can add the current word to the line
+                line.Append($" {word}");
+            }
+            else
+            {
+                calculatedLines.Add(line.ToString());
+                line.Clear();
+                line.Append(word);
+            }
+        }
+
+        // there might be something in line still, so add that too.
+        if (line.Length > 0)
+        {
+            calculatedLines.Add(line.ToString());
+        }
+
+        foreach (string framedLine in FrameText(calculatedLines, useDoubleLines, includeBufferSpace))
+        {
+            yield return framedLine;
+        }
     }
+
+
+    public static IEnumerable<string> FrameText(List<string> sourceLines, bool? useDoubleLines = null, bool? includeBufferSpace = null)
+    {
+        int frameWidth = sourceLines.Max(l => l.Length);
+        if (includeBufferSpace is not null && includeBufferSpace == true) { frameWidth += 2; }
+
+        int lineCount = (useDoubleLines is not null && useDoubleLines == true) ? 2 : 1;
+
+        // handle the top line...
+        string topLine = $"{GetLineChar(0, lineCount, lineCount, 0) ?? '┌'}"
+            .PadRight(frameWidth + 1, GetLineChar(0, lineCount, 0, lineCount) ?? '─') 
+            + (GetLineChar(0, 0, lineCount, lineCount) ?? '┐');
+        yield return topLine;
+
+
+        // handle the contents...
+        char vertical = GetLineChar(lineCount, 0, lineCount, 0) ?? '│';
+        string buffer = (includeBufferSpace is not null && includeBufferSpace == true) ? " " : "";
+
+        foreach (string line in sourceLines)
+        {
+            yield return $"{vertical}{buffer}{line.PadRight(frameWidth-2, ' ')}{buffer}{vertical}";
+        }
+
+
+        // handle the bottom line...
+        string bottomLine = $"{GetLineChar(lineCount, lineCount, 0, 0) ?? '└'}"
+            .PadRight(frameWidth + 1, GetLineChar(0, lineCount, 0, lineCount) ?? '─')
+            + (GetLineChar(lineCount, 0, 0, lineCount) ?? '┘');
+        yield return bottomLine;
+
+    }
+
+
+
 }

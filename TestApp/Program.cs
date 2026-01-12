@@ -14,10 +14,6 @@ internal class Program
     {
         ConsoleClass cnsl = new();
 
-        Console.ForegroundColor = ConsoleColor.Yellow;
-        Console.WriteLine("test");
-        Console.ForegroundColor = ConsoleColor.Green;
-
         cnsl.WriteColorLine("Welcome to the test app for the ConsoleFramework", ConsoleColor.Blue);
         cnsl.WriteColorLine($"arguments received from command line: {args.Length}", ConsoleColor.DarkBlue);
 
@@ -27,9 +23,12 @@ internal class Program
 
         List<IConsoleCommand> cmds = new()
         {
+            new cmdHelp(),
             new cmdExit(), 
             new cmdOptions(),
-            new cmdLogin()
+            new cmdLogin(), 
+            new cmdWorkIndicator(), 
+            new cmdFramedText()
         };
 
         while (keepGoing)
@@ -52,9 +51,24 @@ internal class Program
             if (cmdResult is not null)
             {
                 if (cmdResult.Value.IsExitRequest) { keepGoing = false; continue; }
+                else if (cmdResult.Value.IsHelpRequest) { ShowHelp(cnsl, cmds); }
             }
         }
 
 
+    }
+
+    public static void ShowHelp(IConsole cnsl, List<IConsoleCommand> cmds)
+    {
+        cnsl.WriteColorLine("Help List...", ConsoleColor.Yellow);
+
+        foreach (var cmd in cmds)
+        {
+            cnsl.WriteColor(cmd.Names.ToString(), ConsoleColor.Yellow);
+            cnsl.WriteColor(" = ", ConsoleColor.Yellow);
+            cnsl.WriteColorLine(cmd.ShortHelp, ConsoleColor.Yellow);
+        }
+
+        cnsl.WriteLine();
     }
 }

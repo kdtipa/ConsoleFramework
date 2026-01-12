@@ -21,6 +21,16 @@ public static class CharHelper
 
     public static char CloseSingleQuote { get; } = '’';
 
+    public static char BulletPoint { get; } = '•';
+
+    public static char CurrencyDollar { get; } = '$';
+
+    public static char CurrencyCent { get; } = '¢';
+
+    public static char CurrencyPound { get; } = '£';
+
+    public static char CurrencyYen { get; } = '¥';
+
     /// <summary>
     /// Cleans the string to remove the fancy versions of some characters.  
     /// Specifically, it changes the single character ellipse to three period 

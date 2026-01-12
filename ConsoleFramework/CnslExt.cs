@@ -328,7 +328,7 @@ public static class CnslExt
 
                 // and if we got here, we're doing the stupid thing
                 int currentCursorLocation = Console.CursorLeft;
-                Console.CursorLeft = promptLen + userInput.Length;
+                Console.CursorLeft = promptLen + userInput.Length - 1;
                 Console.Write(maskChar);
                 Console.CursorLeft = currentCursorLocation + 1;
                 userInput.Insert(currentCursorLocation - promptLen, userKey.KeyChar);

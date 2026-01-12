@@ -18,6 +18,24 @@ namespace ConsoleFramework;
 /// </summary>
 public static class CnslExt
 {
+    /// <summary>
+    /// Just so you can continue using CnslExt for normal writes too
+    /// </summary>
+    public static void Write(string? value = null)
+    {
+        Console.Write(value);
+    }
+
+    /// <summary>
+    /// Just so you can continue using CnslExt for normal write-lines too
+    /// </summary>
+    /// <param name="value"></param>
+    public static void WriteLine(string? value = null)
+    {
+        Console.WriteLine(value);
+    }
+
+
     public static void WriteColor(string value, ConsoleColor textColor, ConsoleColor? backgroundColor = null)
     {
         var saved = Console.ForegroundColor;

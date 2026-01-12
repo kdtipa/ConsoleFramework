@@ -340,7 +340,7 @@ public static class ListHelper
 /// them using their comparer.
 /// </summary>
 /// <typeparam name="T">Must extend IComparable T</typeparam>
-public class AutoSortList<T> where T : IComparable<T>
+public class AutoSortList<T> where T : IComparable<T>, IEnumerable<T>
 {
     public AutoSortList() { }
 

@@ -26,20 +26,14 @@ public static class ConsoleCommandInterfaceExtensionMethods
         }
         longHelp.AppendLine();
 
-        // argument details
-        if (cmd.Parameters.Count > 0)
-        {
-            longHelp.AppendLine("Command Parameters...");
-            int longestName = cmd.Parameters.Values.Max(p => p.Name.Length);
-            foreach (var param in cmd.Parameters.Values)
-            {
-                longHelp.AppendLine(param.ToString(longestName));
-            }
-        }
-
         // finish up the text and write the long help message
         longHelp.AppendLine(hzRl);
 
         cnsl.WriteLine(longHelp.ToString());
+    }
+
+    public static bool IsMatch(this IConsoleCommand cmd, string compareString)
+    {
+        return cmd.Names.IsMatch(compareString);
     }
 }

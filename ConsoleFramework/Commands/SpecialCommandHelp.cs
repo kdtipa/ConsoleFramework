@@ -15,19 +15,14 @@ public class SpecialCommandHelp : IConsoleCommand
 
     public string LongHelp { get; } = "This command will get you the general help message.  To get the specific help for a command, type that command name first followed by a help alias.";
 
-    public AutoSortList<CommandParameter> Parameters { get; } = new();
 
     public ConsoleCommandReturn? Run(IConsole cnsl, params string[] args)
     {
-        foreach (string arg in args)
-        {
-            if (Names.IsMatch(arg))
-            {
-                this.ShowLongHelp(cnsl);
-                return null;
-            }
-        }
+        return new ConsoleCommandReturn() { IsHelpRequest = true };
+    }
 
+    public ConsoleCommandReturn? Run(IConsole cnsl, List<string> args)
+    {
         return new ConsoleCommandReturn() { IsHelpRequest = true };
     }
 }

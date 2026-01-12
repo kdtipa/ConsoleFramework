@@ -15,19 +15,13 @@ internal class SpecialCommandExit : IConsoleCommand
 
     public string LongHelp { get; } = "This command tells the console application that you are done and that you want to close the app.  No special arguments are required";
 
-    public AutoSortList<CommandParameter> Parameters { get; } = new();
-
     public ConsoleCommandReturn? Run(IConsole cnsl, params string[] args)
     {
-        foreach (string arg in args)
-        {
-            if (Names.IsMatch(arg))
-            {
-                this.ShowLongHelp(cnsl);
-                return null;
-            }
-        }
+        return new ConsoleCommandReturn() { IsExitRequest = true };
+    }
 
+    public ConsoleCommandReturn? Run(IConsole cnsl, List<string> args)
+    {
         return new ConsoleCommandReturn() { IsExitRequest = true };
     }
 }

@@ -15,8 +15,6 @@ public interface IConsoleCommand
 
     public string LongHelp { get; }
 
-    public AutoSortList<CommandParameter> Parameters { get; }
-
     /// <summary>
     /// This is what gets called to execute your command.  Pass in any relevant 
     /// arguments and parse them in the method's code.  Then do whatever this 
@@ -33,4 +31,6 @@ public interface IConsoleCommand
     /// you can just return null.
     /// </returns>
     public ConsoleCommandReturn? Run(IConsole cnsl, params string[] args);
+
+    public ConsoleCommandReturn? Run(IConsole cnsl, List<string> args);
 }

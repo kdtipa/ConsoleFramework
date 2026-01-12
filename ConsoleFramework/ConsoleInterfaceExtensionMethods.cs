@@ -358,6 +358,7 @@ public static class ConsoleInterfaceExtensionMethods
     {
         var returnVal = new StringBuilder();
         var listening = true;
+        int startPosition = cnsl.CursorLeft;
 
         while (listening)
         {
@@ -367,12 +368,13 @@ public static class ConsoleInterfaceExtensionMethods
 
             if (userKey.Key == ConsoleKey.Enter)
             {
+                cnsl.WriteLine();
                 listening = false;
             }
             else if (userKey.Key == ConsoleKey.Backspace)
             {
                 // if there's nothing ahead of the cursor, just ignore the key press
-                if (currentCursorPosition == 0) { continue; }
+                if (currentCursorPosition - startPosition == 0) { continue; }
 
                 // remove a mask char from the end of the line
                 cnsl.CursorLeft = returnVal.Length;
@@ -380,64 +382,60 @@ public static class ConsoleInterfaceExtensionMethods
                 cnsl.CursorLeft = currentCursorPosition - 1;
 
                 // remove character from user input at cursor location if there's anything ahead of the cursor
-                if (returnVal.Length >= cnsl.CursorLeft)
+                if (returnVal.Length >= cnsl.CursorLeft - startPosition)
                 {
-                    returnVal.Remove(cnsl.CursorLeft, 1);
+                    returnVal.Remove(cnsl.CursorLeft - startPosition, 1);
                 }
             }
             else if (userKey.Key == ConsoleKey.Delete)
             {
                 // if the cursor is not at the end of the input, remove the character after it
-                if (currentCursorPosition > currentInputLen) { continue; }
+                if (currentCursorPosition - startPosition > currentInputLen) { continue; }
 
                 if (currentInputLen > 0)
                 {
-                    returnVal.Remove(currentCursorPosition, 1);
+                    returnVal.Remove(currentCursorPosition - startPosition, 1);
                     cnsl.CursorLeft = currentInputLen;
                     cnsl.Write("\b \b");
-                    cnsl.CursorLeft = currentCursorPosition;
+                    cnsl.CursorLeft = currentCursorPosition - startPosition;
                 }
             }
             else if (userKey.Key == ConsoleKey.LeftArrow || userKey.Key == ConsoleKey.UpArrow)
             {
                 // move cursor left
-                if (cnsl.CursorLeft > 0) { cnsl.CursorLeft--; }
+                if (cnsl.CursorLeft > startPosition) { cnsl.CursorLeft--; }
             }
             else if (userKey.Key == ConsoleKey.RightArrow || userKey.Key == ConsoleKey.DownArrow)
             {
                 // move cursor right
-                if (cnsl.CursorLeft < returnVal.Length) { cnsl.CursorLeft++; }
+                if (cnsl.CursorLeft < returnVal.Length + startPosition) { cnsl.CursorLeft++; }
             }
             else
             {
+                // ToDo: fix this so it doesn't throw an exception
                 // should be a letter key... so... figure out where to add what was typed
-                if (currentCursorPosition == currentInputLen)
+                if (currentCursorPosition - startPosition >= currentInputLen)
                 {
                     returnVal.Append(userKey.KeyChar);
                 }
                 else
                 {
-                    returnVal.Insert(currentCursorPosition, userKey.KeyChar);
+                    returnVal.Insert(currentCursorPosition - startPosition, userKey.KeyChar);
                 }
 
 
                 // and write mask char to screen
-                if (currentCursorPosition < currentInputLen)
-                {
-                    cnsl.CursorLeft = currentInputLen;
-                    cnsl.Write(maskChar);
-                    cnsl.CursorLeft = currentCursorPosition;
-                }
-                else
-                {
-                    cnsl.Write(maskChar);
-                }
+                int savedPosition = cnsl.CursorLeft;
+                cnsl.CursorLeft = startPosition + returnVal.Length - 1;
+                cnsl.Write(maskChar);
+                cnsl.CursorLeft = savedPosition + 1;
+                
 
             }
 
         }
 
-        return maskChar.ToString();
+        return returnVal.ToString();
     }
 
     private static string? ReadLineShowWhileTyping(IConsole cnsl, char maskChar)

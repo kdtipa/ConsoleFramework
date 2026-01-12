@@ -119,6 +119,7 @@ public struct CommandName : IEquatable<CommandName>, IComparable<CommandName>
     public static bool operator ==(CommandName a, CommandName b) { return a.Equals(b); }
     public static bool operator !=(CommandName a, CommandName b) { return !a.Equals(b); }
 
-
+    public static bool operator ==(CommandName a, string b) { return a.IsMatch(b); }
+    public static bool operator !=(CommandName a, string b) { return !a.IsMatch(b); }
 
 }

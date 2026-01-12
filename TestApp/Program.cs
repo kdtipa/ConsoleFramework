@@ -1,6 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using ConsoleFramework;
+using ConsoleFramework.Commands;
 using ConsoleFramework.Helpers;
+using TestApp.commands;
 
 namespace TestApp;
 
@@ -18,33 +22,39 @@ internal class Program
         cnsl.WriteColorLine($"arguments received from command line: {args.Length}", ConsoleColor.DarkBlue);
 
         string mainPrompt = ">> ";
+        bool keepGoing = true;
+        cmdExit exit = new();
 
-        OptionsHelper<DateTime> dateTimeOptions = new(cnsl, "available dates...", true);
-        dateTimeOptions.InputPrompt = mainPrompt;
-        dateTimeOptions.InputPromptColor = ConsoleColor.White;
-        dateTimeOptions.OptionPrefix = " - ";
-        dateTimeOptions.OptionsTextColor = ConsoleColor.Yellow;
-        dateTimeOptions.OptionsBackgroundColor = ConsoleColor.DarkGray;
-        dateTimeOptions.OptionsTextHighlight = ConsoleColor.DarkGray;
-        dateTimeOptions.OptionsBackgroundHighlight = ConsoleColor.Yellow;
-
-        DateTime worker = DateTime.Now;
-
-        for (int incr = 1; incr <= 5; incr++)
+        List<IConsoleCommand> cmds = new()
         {
-            worker = worker.AddDays(4);
-            dateTimeOptions.Options.Add(new OptionsHelperItem<DateTime>(worker.ToString("ddd, yyyy-MM-dd"), worker));
+            new cmdExit(), 
+            new cmdOptions(),
+            new cmdLogin()
+        };
+
+        while (keepGoing)
+        {
+            var userInput = cnsl.ReadLine(mainPrompt, ConsoleColor.DarkGray, ConsoleColor.White);
+
+            if (string.IsNullOrWhiteSpace(userInput)) { continue; }
+
+            ConsoleCommandHelper.BreakUpInput(userInput, out var userCmd, out var userArgs);
+
+            if (string.IsNullOrEmpty(userCmd)) { continue; }
+
+            var matchingCmd = cmds.Where(cmd => cmd.IsMatch(userCmd)).FirstOrDefault();
+
+            if (matchingCmd is null) { cnsl.WriteColorLine($"No command matches for [{userCmd}]\n", ConsoleColor.Yellow); continue; }
+
+            if (userArgs is null) { userArgs = new List<string>(); }
+            var cmdResult = matchingCmd.Run(cnsl, userArgs);
+
+            if (cmdResult is not null)
+            {
+                if (cmdResult.Value.IsExitRequest) { keepGoing = false; continue; }
+            }
         }
 
-        if (dateTimeOptions.RunOptionList(out var result))
-        {
-            cnsl.WriteColorLine($"HOORAY!  We got a selection of {result.Value.Text}!", ConsoleColor.Yellow);
-        }
-        else
-        {
-            cnsl.WriteColorLine($"Boo... no selection was made", ConsoleColor.DarkRed);
-        }
 
-        cnsl.ReadLine();
     }
 }

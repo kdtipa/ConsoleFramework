@@ -33,21 +33,29 @@ internal class Program
 
         while (keepGoing)
         {
+            // get the user's input
             var userInput = cnsl.ReadLine(mainPrompt, ConsoleColor.DarkGray, ConsoleColor.White);
 
+            // just loop back around if they didn't give us anything
             if (string.IsNullOrWhiteSpace(userInput)) { continue; }
 
+            // use a utility method to break it up in case they gave arguments
             ConsoleCommandHelper.BreakUpInput(userInput, out var userCmd, out var userArgs);
 
+            // shouldn't be possible, but just in case, we'll check for empty
             if (string.IsNullOrEmpty(userCmd)) { continue; }
 
+            // now we compare that first chunk of text to the command list to see if there's a match
             var matchingCmd = cmds.Where(cmd => cmd.IsMatch(userCmd)).FirstOrDefault();
 
+            // if there's no match, alert the user and loop back around
             if (matchingCmd is null) { cnsl.WriteColorLine($"No command matches for [{userCmd}]\n", ConsoleColor.Yellow); continue; }
 
+            // run the command
             if (userArgs is null) { userArgs = new List<string>(); }
             var cmdResult = matchingCmd.Run(cnsl, userArgs);
 
+            // deal with results of running the command
             if (cmdResult is not null)
             {
                 if (cmdResult.Value.IsExitRequest) { keepGoing = false; continue; }
@@ -62,13 +70,47 @@ internal class Program
     {
         cnsl.WriteColorLine("Help List...", ConsoleColor.Yellow);
 
+        List<HelpPair> helpPairs = new List<HelpPair>();
         foreach (var cmd in cmds)
         {
-            cnsl.WriteColor(cmd.Names.ToString(), ConsoleColor.Yellow);
+            helpPairs.Add(new HelpPair(cmd.Names.ToString(), cmd.ShortHelp));
+        }
+
+        int longestAliases = helpPairs.Max(hp => hp.AliasesLength);
+
+        foreach (var helpText in helpPairs)
+        {
+            cnsl.WriteColor(helpText.Aliases.PadRight(longestAliases, ' '), ConsoleColor.Yellow);
             cnsl.WriteColor(" = ", ConsoleColor.Yellow);
-            cnsl.WriteColorLine(cmd.ShortHelp, ConsoleColor.Yellow);
+            cnsl.WriteColorLine(helpText.ShortHelp, ConsoleColor.Yellow);
         }
 
         cnsl.WriteLine();
     }
+}
+
+public struct HelpPair
+{
+    public HelpPair() { }
+
+    public HelpPair(string aliases, string shortHelp)
+    {
+        Aliases = aliases;
+        ShortHelp = shortHelp;
+    }
+
+    private string _aliases = string.Empty;
+    public string Aliases
+    {
+        get { return _aliases; } 
+        set
+        {
+            _aliases = value;
+            AliasesLength = _aliases.Length;
+        }
+    }
+
+    public int AliasesLength { get; private set; } = 0;
+
+    public string ShortHelp { get; set; } = string.Empty;
 }

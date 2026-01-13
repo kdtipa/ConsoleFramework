@@ -39,7 +39,7 @@ public class cmdFramedText : IConsoleCommand
         + "Jedi, no one pushed back on the Rube Goldberg rescue plan and no one pushed back on "
         + "Ewoks replacing Wookiees.  By the Prequels, no one pushed back at all, we got poorly "
         + "crafted backbone of setting and events where Jedi are military commanders somehow and "
-        + "they're willing to use living things that can suffer as soldiers.  It would have made "
+        + "they're willing to use living things that can suffer as slave soldiers.  It would have made "
         + "more sense anyway if the Separatists were the cloners who based their economy on having "
         + "access to cheap but non-droid labor that can fill roles droids struggle with like "
         + "nannies, teachers, clerks, doctors that people can feel comfortable with, and yes..." 

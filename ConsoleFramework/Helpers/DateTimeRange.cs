@@ -361,7 +361,7 @@ public struct DateTimeRange : IEquatable<DateTimeRange>, IComparable<DateTimeRan
     }
 
     /// <summary>
-    /// INCOMPLETE - This parsing is ridiculous.  The number of ways to write a data range is just ridiculous.  
+    /// INCOMPLETE - This parsing is ridiculous.  The number of ways to write a date range is just ridiculous.  
     /// The method handles some cases right now, but misses a few too.  I'm pausing finishing it hoping I can 
     /// think of a more modular way to write this method instead of the wall of code that it is currently.
     /// </summary>

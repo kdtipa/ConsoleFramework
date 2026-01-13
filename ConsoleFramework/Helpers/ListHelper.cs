@@ -335,55 +335,6 @@ public static class ListHelper
 
 }
 
-/// <summary>
-/// This class is essentially a List but as you add the items, it sorts 
-/// them using their comparer.
-/// </summary>
-/// <typeparam name="T">Must extend IComparable T</typeparam>
-public class AutoSortList<T> where T : IComparable<T>, IEnumerable<T>
-{
-    public AutoSortList() { }
-
-    public AutoSortList(params T[] items)
-    {
-        AddRange(items);
-    }
-
-    private List<T> _items = new();
-
-    public void Add(T item)
-    {
-        int i = _items.BinarySearch(item);
-        if (i < 0) { i = ~i; }
-        _items.Insert(i, item);
-    }
-
-    public void AddRange(params T[] items)
-    {
-        // have to do the loop so the sorting happens on insert
-        foreach (T item in items) { Add(item); }
-    }
-
-    public bool Remove(T item) { return _items.Remove(item); }
-
-    public void Clear() { _items.Clear(); }
-
-    public IEnumerable<T> Values { get { foreach (T item in _items) { yield return item; } } }
-
-    public T this[int index]
-    {
-        get { return _items[index]; }
-    } 
-
-    public int Count { get { return _items.Count; } }
-
-
-    public override string ToString()
-    {
-        return string.Join(", ", _items);
-    }
-
-}
 
 /// <summary>
 /// This is a bit of a niche use case where you might want a list of 
@@ -589,7 +540,7 @@ public class ConcatList
 }
 
 
-public class UniqueList<T> where T : IEquatable<T>, IComparable<T>
+public class UniqueList<T> : IEnumerable<T> where T : IEquatable<T>, IComparable<T>
 {
     public UniqueList() { }
 
@@ -679,7 +630,15 @@ public class UniqueList<T> where T : IEquatable<T>, IComparable<T>
         _items.Sort();
     }
 
+    public IEnumerator<T> GetEnumerator()
+    {
+        foreach (var item in _items) { yield return item; }
+    }
 
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
+    }
 }
 
 /// <summary>
@@ -846,215 +805,5 @@ public class GhostList<T> : IEnumerable<T>, IEquatable<GhostList<T>> where T : I
 }
 
 
-public class TreeList<T> where T : struct, IEquatable<T>
-{
-
-    private List<TreeListNode<T>> _items = new();
-
-    public IEnumerable<T> UnsortedItems
-    {
-        get
-        {
-            foreach (var item in _items) { yield return item.Value; }
-        }
-    }
-
-    public int Count { get { return _items.Count; } }
-
-    /// <summary>
-    /// To add a node to a tree structure, you need to know which other 
-    /// node is its parent.  Because we need to be able to find a parent 
-    /// definitively, each node must be unique.  So, you can't add a node 
-    /// that already exists in the tree; the parent can't be itself; and 
-    /// we need to be sure that adding the node won't create a circular 
-    /// reference.  If it has any of those problems, it will not add the 
-    /// node.  Several nodes can have the same parent though, and we need 
-    /// to know what order to sort the siblings in.  So provide a meaningful 
-    /// siblingSortValue which will put the siblings under a parent in 
-    /// alphabetical order based on that when you get the sorted tree.
-    /// </summary>
-    /// <param name="item">The unique item you want to add to the tree</param>
-    /// <param name="siblingSortValue">The string to use for sorting siblings</param>
-    /// <param name="parent">
-    /// The node you want to use as the parent of this node.  If you pass in 
-    /// null or a parent that doesn't exist in the list, the added node will 
-    /// be treated as a root node.  If the parent is added later, the relationship 
-    /// will be intact.
-    /// </param>
-    /// <returns>true if the item was added</returns>
-    public bool Add(T item, string siblingSortValue, T? parent = null)
-    {
-        if (_items.Any(n => n.Value.Equals(item))) { return false; }
-
-        _items.Add(new TreeListNode<T>(item, siblingSortValue, parent));
-        return true;
-    }
-
-    public bool Remove(T item)
-    {
-        for (int i = 0; i < _items.Count; i++)
-        {
-            if (_items[i].Value.Equals(item)) { _items.RemoveAt(i); return true; }
-        }
-        return false;
-    }
-
-    public bool Contains(T item)
-    {
-        return _items.Any(n => n.Value.Equals(item));
-    }
-
-    public TreeListNodeAddress GetPath(T item)
-    {
-        int itemIndex = _items.IndexOf(n => n.Value.Equals(item));
-
-        TreeListNode<T> worker = _items[itemIndex];
-        List<int> path = [itemIndex];
-        while (worker.Parent is not null && Contains(worker.Value))
-        {
-            itemIndex = _items.IndexOf(n => n.Value.Equals(worker.Parent.Value));
-            path.Add(itemIndex);
-            worker = _items[itemIndex];
-        }
-
-        TreeListNodeAddress result = new();
-        for (int i = path.Count - 1; i >= 0; i--)
-        {
-            result.Add(path[i]);
-        }
-
-        return result;
-    }
-
-    public IEnumerable<T> GetBranch(T item)
-    {
-        var path = GetPath(item);
-
-        foreach (var n in path.Path)
-        {
-            yield return _items[n].Value;
-        }
-    }
 
 
-
-}
-
-internal struct TreeListNode<T> : IEquatable<TreeListNode<T>> where T : struct, IEquatable<T>
-{
-    public TreeListNode(T item, string siblingSortValue, T? parent = null)
-    {
-        Value = item;
-        SiblingSortValue = siblingSortValue;
-        Parent = parent;
-    }
-
-    public T Value { get; private set; }
-
-    public T? Parent { get; private set; }
-
-    public string SiblingSortValue { get; set; } = string.Empty;
-
-    public bool Equals(TreeListNode<T> other)
-    {
-        return Parent.Equals(other.Parent)
-            && string.Equals(SiblingSortValue, other.SiblingSortValue, StringComparison.OrdinalIgnoreCase) 
-            && Value.Equals(other.Value);
-    }
-
-    public override bool Equals([NotNullWhen(true)] object? obj)
-    {
-        if (obj is null) { return false; }
-
-        if (obj is TreeListNode<T> tlnObj) { return Equals(tlnObj); }
-
-        if (obj is T tObj) { return Value.Equals(tObj); }
-
-        return false;
-    }
-
-    public override int GetHashCode()
-    {
-        return Value.GetHashCode();
-    }
-
-    public override string ToString()
-    {
-        return SiblingSortValue;
-    }
-
-    public static bool operator ==(TreeListNode<T> left, TreeListNode<T> right) { return left.Equals(right); }
-    public static bool operator !=(TreeListNode<T> left, TreeListNode<T> right) { return !left.Equals(right); }
-}
-
-public struct TreeListNodeAddress : IEquatable<TreeListNodeAddress>
-{
-    public TreeListNodeAddress() { }
-
-    public TreeListNodeAddress(List<int> initialSteps)
-    {
-        _path = initialSteps;
-    }
-
-    private List<int> _path = new();
-
-    public IEnumerable<int> Path { get { foreach (int i in _path) { yield return i; } } }
-
-    public int StepCount { get { return _path.Count; } }
-
-    /// <summary>
-    /// adds a step to the end of the list
-    /// </summary>
-    /// <param name="step"></param>
-    public void Add(int step)
-    {
-        _path.Add(step);
-    }
-
-    /// <summary>
-    /// pops the last step off the list
-    /// </summary>
-    public void Remove()
-    {
-        _path.RemoveAt(_path.Count - 1);
-    }
-
-    public bool Equals(TreeListNodeAddress other)
-    {
-        int pathCount = _path.Count;
-        int otherCount = other.StepCount;
-
-        if (pathCount != otherCount) { return false; }
-
-        for (int i = 0; i < pathCount; i++)
-        {
-            if (_path[i] != other._path[i]) { return false; }
-        }
-
-        return true;
-    }
-
-    public override bool Equals([NotNullWhen(true)] object? obj)
-    {
-        if (obj is null) { return false; }
-
-        if (obj is TreeListNodeAddress tlnaObj) { return Equals(tlnaObj); }
-
-        if (obj is List<int> liObj) { return Equals(new TreeListNodeAddress(liObj)); }
-
-        return false;
-    }
-
-    public override int GetHashCode()
-    {
-        return _path.GetHashCode();
-    }
-
-    public override string ToString()
-    {
-        return string.Join(", ", _path);
-    }
-
-    public static bool operator ==(TreeListNodeAddress a, TreeListNodeAddress b) { return a.Equals(b); }
-    public static bool operator !=(TreeListNodeAddress a, TreeListNodeAddress b) { return !a.Equals(b); }
-}

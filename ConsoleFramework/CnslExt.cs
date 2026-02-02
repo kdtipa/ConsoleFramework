@@ -1,6 +1,7 @@
 ﻿using ConsoleFramework.Helpers;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -413,9 +414,222 @@ public static class CnslExt
         }
     }
 
+    /// <summary>
+    /// A simple input that separates year, month, and day so we don't need to worry about 
+    /// formatting or order for dates like 4/5/26.  Allows month names too including abbreviations.
+    /// </summary>
+    /// <param name="promptColor">The color the text of the prompt will be</param>
+    /// <param name="inputColor">The color the text of the user input will be</param>
+    /// <param name="yearPrompt">defaults to "year: ", but can be adjusted if you like</param>
+    /// <param name="monthPrompt">defaults to "month: ", but can be adjusted if you like</param>
+    /// <param name="dayPrompt">defaults to "day: ", but can be adjusted if you like</param>
+    /// <returns>A DateOnly object if all three values were input successfully or null if there was a problem.</returns>
+    public static DateOnly? ReadDate(
+        ConsoleColor? promptColor = null, 
+        ConsoleColor? inputColor = null, 
+        string? yearPrompt = null, 
+        string? monthPrompt = null, 
+        string? dayPrompt = null)
+    {
+        var savedColor = Console.ForegroundColor;
+        int maxPromptLen = 12;
+
+        string yp = "year: ";
+        if (!string.IsNullOrEmpty(yearPrompt)) { yp = yearPrompt; }
+        if (yp.Length > maxPromptLen) { yp = yp.Substring(0, maxPromptLen); }
+
+        string mp = "month: ";
+        if (!string.IsNullOrEmpty(monthPrompt)) { mp = monthPrompt; }
+        if (mp.Length > maxPromptLen) { mp = mp.Substring(0, maxPromptLen); }
+
+        string dp = "day: ";
+        if (!string.IsNullOrEmpty(dayPrompt)) { dp = dayPrompt; }
+        if (dp.Length > maxPromptLen) { dp = dp.Substring(0, maxPromptLen); }
+
+        // get year first so we can know if it's a leap year
+        // ===========================================================================
+        int yr = -1;
+        Console.ForegroundColor = promptColor ?? savedColor;
+        Console.Write(yp);
+
+        Console.ForegroundColor = inputColor ?? savedColor;
+        var yearInput = Console.ReadLine();
+        if (int.TryParse(yearInput, out int parsedYear))
+        {
+            if (parsedYear >= 0 && parsedYear <= 99)
+            {
+                yr = DateTimeHelper.GetClosestFourDigitYear(parsedYear) ?? -1;
+            }
+            else if (parsedYear > 99)
+            {
+                yr = parsedYear;
+            }
+        }
+
+        if (yr == -1) { return null; }
 
 
+        // get month next so we can know what days are valid
+        // ===========================================================================
+        int mn = -1;
+        Console.ForegroundColor = promptColor ?? savedColor;
+        Console.Write(mp);
 
+        Console.ForegroundColor = inputColor ?? savedColor;
+        var monthInput = Console.ReadLine();
+        if (int.TryParse(monthInput, out int parsedMonth))
+        {
+            if (parsedMonth >= 1 && parsedMonth <= 12) { mn = parsedMonth; }
+        }
+        else if (DateTimeHelper.TryParseMonth(monthInput ?? string.Empty, out var parsedStrMonth, out _) && parsedStrMonth is not null)
+        {
+            mn = parsedStrMonth ?? -1;
+        }
+
+        if (mn == -1) { return null; }
+
+
+        // finally get the day of the month
+        // ===========================================================================
+        int dy = -1;
+        Console.ForegroundColor = promptColor ?? savedColor;
+        Console.Write(dp);
+
+        Console.ForegroundColor = inputColor ?? savedColor;
+        var dayInput = Console.ReadLine();
+        var maxDay = DateTimeHelper.DaysInMonth(mn, yr);
+        if (int.TryParse(dayInput, out int parsedDay) && parsedDay >= 1 && parsedDay <= maxDay)
+        {
+            dy = parsedDay;
+        }
+
+        if (dy == -1) { return null; }
+
+
+        // now we know we have a good date, so let's make sure the color is back to normal and then return.
+        Console.ForegroundColor = savedColor;
+        return new DateOnly(yr, mn, dy);
+
+    }
+
+
+    public static int? ReadInt(
+        string? inputPrompt = null, 
+        ConsoleColor? promptColor = null, 
+        ConsoleColor? inputColor = null)
+    {
+        ConsoleColor saved = Console.ForegroundColor;
+
+        if (!string.IsNullOrEmpty(inputPrompt))
+        {
+            Console.ForegroundColor = promptColor ?? saved;
+            Console.Write(inputPrompt);
+        }
+
+        int firstCol = Console.CursorLeft;  // need to know where input starts for deletions and arrow keys
+        bool keepListening = true;
+        var userInput = new StringBuilder();
+        Console.ForegroundColor = inputColor ?? saved;
+
+        while (keepListening)
+        {
+            var userKey = Console.ReadKey(true);
+
+            if (userKey.Key == ConsoleKey.Escape)
+            {
+                userInput.Clear();
+                keepListening = false;
+            }
+            else if (userKey.Key == ConsoleKey.Enter)
+            {
+                keepListening = false;
+            }
+            else if (userKey.Key == ConsoleKey.Backspace)
+            {
+                if (Console.CursorLeft > firstCol)
+                {
+                    // need to remove the character from the stringbuilder and from the console display
+                    int currentPos = Console.CursorLeft;
+                    int strBldIndex = currentPos - firstCol - 1;
+                    userInput.Remove(strBldIndex, 1);
+                    Console.CursorLeft = firstCol;
+                    Console.Write($"{userInput.ToString()} ");
+                    Console.CursorLeft = currentPos - 1;
+                }
+            }
+            else if (userKey.Key == ConsoleKey.Delete)
+            {
+                if (firstCol + userInput.Length > Console.CursorLeft)
+                {
+                    // need to remove the character from the stringbuilder and from the console display
+                    int currentPos = Console.CursorLeft;
+                    int strBldIndex = currentPos - firstCol;
+                    userInput.Remove(strBldIndex, 1);
+                    Console.CursorLeft = firstCol;
+                    Console.Write($"{userInput.ToString()} ");
+                    Console.CursorLeft = currentPos;
+                }
+            }
+            else if (userKey.Key == ConsoleKey.OemMinus || userKey.Key == ConsoleKey.Subtract)
+            {
+                if (Console.CursorLeft == firstCol)
+                {
+                    if (userInput.Length == 0) { userInput.Append('-'); Console.Write('-'); }
+                    else if (userInput[0] != '-')
+                    {
+                        userInput.Insert(0, '-');
+                        Console.Write(userInput.ToString());
+                        Console.CursorLeft = firstCol + 1;
+                    }
+                }
+            }
+            else if (Utility.ConsoleKeyIsNumeric(userKey.Key, out var numChar))
+            {
+                if (Console.CursorLeft < firstCol + userInput.Length)
+                {
+                    // need an insert
+                    userInput.Insert(Console.CursorLeft - firstCol, numChar);
+                    int currentPos = Console.CursorLeft;
+                    Console.CursorLeft = firstCol;
+                    Console.Write(userInput.ToString());
+                    Console.CursorLeft = currentPos + 1;
+                }
+                else
+                {
+                    // need an append
+                    userInput.Append(numChar);
+                    Console.Write(numChar);
+                }
+                
+            }
+            else if (userKey.Key == ConsoleKey.LeftArrow)
+            {
+                if (Console.CursorLeft > firstCol)
+                {
+                    Console.CursorLeft -= 1;
+                }
+            }
+            else if (userKey.Key == ConsoleKey.RightArrow)
+            {
+                if (Console.CursorLeft < firstCol + userInput.Length)
+                {
+                    Console.CursorLeft += 1; 
+                }
+            }
+        }
+
+
+        Console.WriteLine();
+        Console.ForegroundColor = saved;
+
+        if (userInput.Length > 0 && int.TryParse(userInput.ToString(), out int parsedInput))
+        {
+            return parsedInput;
+        }
+        return null;
+    }
+
+    
 
 
 

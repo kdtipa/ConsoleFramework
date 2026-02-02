@@ -330,6 +330,17 @@ public static class ListHelper
     }
 
 
+    public static List<int> IndexesOf<T>(this List<T> sourceList, T searchFor) where T : IEquatable<T>
+    {
+        List<int> found = new();
+
+        for (int i = 0; i < sourceList.Count; i++)
+        {
+            if (sourceList[i].Equals(searchFor)) { found.Add(i); }
+        }
+
+        return found;
+    }
 
 
 

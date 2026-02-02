@@ -24,11 +24,12 @@ internal class Program
         List<IConsoleCommand> cmds = new()
         {
             new cmdHelp(),
-            new cmdExit(), 
+            new cmdExit(),
             new cmdOptions(),
-            new cmdLogin(), 
-            new cmdWorkIndicator(), 
-            new cmdFramedText()
+            new cmdLogin(),
+            new cmdWorkIndicator(),
+            new cmdFramedText(),
+            new cmdInputInt()
         };
 
         while (keepGoing)

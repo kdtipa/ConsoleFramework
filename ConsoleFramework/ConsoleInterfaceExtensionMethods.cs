@@ -153,13 +153,14 @@ public static class ConsoleInterfaceExtensionMethods
 
             // handle the text
             cnsl.ForegroundColor = itemColor;
-            bool firstLine = true;
-            foreach (var bulletLine in BreakLine(item, availableWidth))
-            {
-                if (!firstLine) { cnsl.Write("".PadRight(bulletLen)); }  // add the indent if needed
-                cnsl.WriteLine(bulletLine);
-                firstLine = false;
-            }
+            cnsl.WriteLine(item);
+            //bool firstLine = true;
+            //foreach (var bulletLine in BreakLine(item, availableWidth))
+            //{
+            //    if (!firstLine) { cnsl.Write("".PadRight(bulletLen)); }  // add the indent if needed
+            //    cnsl.WriteLine(bulletLine);
+            //    firstLine = false;
+            //}
         }
 
         // and last, just set the foreground color back to what it was before

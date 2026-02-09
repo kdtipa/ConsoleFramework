@@ -109,7 +109,12 @@ public static class IntHelper
         if (isNegative) { yield return worker * -1; }
     }
 
-
+    /// <summary>
+    /// Gets you the absolute value of this integer, but there 
+    /// is one exception case where this method is called on the 
+    /// minimum int value because it cannot be represented as a 
+    /// positive integer.
+    /// </summary>
     public static int Absolute(this int val)
     {
         return val * (val < 0 ? -1 : 1);

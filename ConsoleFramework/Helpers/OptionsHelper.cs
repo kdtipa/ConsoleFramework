@@ -389,7 +389,7 @@ public struct OptionsHelperItem<T> : IEquatable<OptionsHelperItem<T>>, IComparab
 
     /// <summary>
     /// Doesn't care about sort order, but compares both the 
-    /// Value and Text for equality.
+    /// IntValue and Text for equality.
     /// </summary>
     public bool Equals(OptionsHelperItem<T> other)
     {
